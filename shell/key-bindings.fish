@@ -67,8 +67,9 @@ function fzf_key_bindings
       # history's -z flag was added in fish 2.4.0, so don't use it for versions
       # before 2.4.0.
       if test "$FISH_MAJOR" -gt 2 -o \( "$FISH_MAJOR" -eq 2 -a "$FISH_MINOR" -ge 4 \)
-        set -lx FZF_DEFAULT_OPTS (__fzf_defaults "" "-n2..,.. --scheme=history --bind=ctrl-r:toggle-sort --wrap-sign '"\t"↳ ' --highlight-line $FZF_CTRL_R_OPTS +m")
+        set -lx FZF_DEFAULT_OPTS (__fzf_defaults "" "-n2..,.. --scheme=history --bind=ctrl-r:toggle-sort --wrap-sign '"\t"↳ ' --highlight-line +m $FZF_CTRL_R_OPTS")
         set -lx FZF_DEFAULT_OPTS_FILE ''
+        string match -q -r -- '/fish$' $SHELL; or set -a FZF_DEFAULT_OPTS '--with-shell=fish'
         if type -q perl
           set -a FZF_DEFAULT_OPTS '--tac'
           set -fx FZF_DEFAULT_COMMAND 'builtin history -z --reverse | command perl -0 -pe \'s/^/$.\t/g; s/\n/\n\t/gm\''
@@ -79,7 +80,7 @@ function fzf_key_bindings
             'string join0 -- $i\t(string replace -a -- \n \n\t $h[$i] | string collect);' \
             'end'
         end
-        eval (__fzfcmd) --read0 --print0 -q '(commandline)' | string replace -r '^\d*\t' '' | read -lz result
+        eval (__fzfcmd) --read0 --print0 -q '(commandline)' --bind='enter:become:"string replace -a -- \n\t \n {2..} | string collect"' | read -lz result
         and commandline -- $result
       else
         builtin history | eval (__fzfcmd) -q '(commandline)' | read -l result
