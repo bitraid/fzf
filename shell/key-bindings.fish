@@ -37,7 +37,10 @@ function fzf_key_bindings
       set -lx FZF_DEFAULT_OPTS (__fzf_defaults "--reverse --walker=file,dir,follow,hidden --scheme=path --walker-root=$dir" "$FZF_CTRL_T_OPTS")
       set -lx FZF_DEFAULT_COMMAND "$FZF_CTRL_T_COMMAND"
       set -lx FZF_DEFAULT_OPTS_FILE ''
-      eval (__fzfcmd) -m --query=$fzf_query | while read -l r; set -a result $r; end
+
+      # For compatibility with fish versions prior to 3.0b1, `set` should not
+      # use the `-a | --append` switch.
+      eval (__fzfcmd) -m --query=$fzf_query | while read -l r; set -l result $result $r; end
     end
     if test -z "$result"
       commandline -f repaint
@@ -57,6 +60,8 @@ function fzf_key_bindings
   function fzf-history-widget -d "Show command history"
     test -n "$FZF_TMUX_HEIGHT"; or set FZF_TMUX_HEIGHT 40%
     begin
+      # For compatibility with fish versions prior to 3.2.0, `string split`
+      # should not use the `-f | --fields` switch.
       set -l FISH_MAJOR (string split -- '.' $version)[1]
       set -l FISH_MINOR (string split -- '.' $version)[2]
 
@@ -69,12 +74,22 @@ function fzf_key_bindings
       if test "$FISH_MAJOR" -gt 2 -o \( "$FISH_MAJOR" -eq 2 -a "$FISH_MINOR" -ge 4 \)
         set -lx FZF_DEFAULT_OPTS (__fzf_defaults "" "-n2..,.. --scheme=history --bind=ctrl-r:toggle-sort --wrap-sign '"\t"↳ ' --highlight-line +m $FZF_CTRL_R_OPTS")
         set -lx FZF_DEFAULT_OPTS_FILE ''
-        string match -q -r -- '/fish$' $SHELL; or set -a FZF_DEFAULT_OPTS '--with-shell=fish'
+
+        # For compatibility with fish versions prior to 3.0b1, `set` should not
+        # use the `-a | --append` switch.
+        string match -q -r -- '/fish$' $SHELL; or set FZF_DEFAULT_OPTS $FZF_DEFAULT_OPTS '--with-shell=fish'
+
+        # For compatibility with fish versions prior to 3.4.0, `set` should not
+        # use the `-f | --function` switch, so the FZF_DEFAULT_COMMAND variable
+        # is set as local, outside the `if` block.
+        set -lx FZF_DEFAULT_COMMAND
         if type -q perl
-          set -a FZF_DEFAULT_OPTS '--tac'
-          set -fx FZF_DEFAULT_COMMAND 'builtin history -z --reverse | command perl -0 -pe \'s/^/$.\t/g; s/\n/\n\t/gm\''
+          # For compatibility with fish versions prior to 3.0b1, `set` should
+          # not use the `-a | --append` switch.
+          set FZF_DEFAULT_OPTS $FZF_DEFAULT_OPTS '--tac'
+          set FZF_DEFAULT_COMMAND 'builtin history -z --reverse | command perl -0 -pe \'s/^/$.\t/g; s/\n/\n\t/gm\''
         else
-          set -fx FZF_DEFAULT_COMMAND \
+          set FZF_DEFAULT_COMMAND \
             'set -l h (builtin history -z --reverse | string split0);' \
             'for i in (seq (count $h) -1 1);' \
             'string join0 -- $i\t(string replace -a -- \n \n\t $h[$i] | string collect);' \
