@@ -114,6 +114,7 @@ module TestShell
     end
     tmux.send_keys 'echo 4th', :Enter
     tmux.prepare
+    sleep(1)
     tmux.send_keys 'C-r'
     tmux.until { |lines| assert_operator lines.match_count, :>, 0 }
     tmux.send_keys 'e3d'
@@ -135,6 +136,7 @@ module TestShell
     tmux.send_keys 'echo "foo', :Enter, 'bar"', :Enter
     tmux.until { |lines| assert_equal %w[foo bar], lines[-2..] }
     tmux.prepare
+    sleep(1)
     tmux.send_keys 'C-r'
     tmux.until { |lines| assert_equal '>', lines[-1] }
     tmux.send_keys 'foo bar'
@@ -1019,6 +1021,7 @@ class TestFish < TestBase
     tmux.prepare
     tmux.send_keys 'echo "bar', :Enter, 'foo"', :Enter
     tmux.prepare
+    sleep(1)
     tmux.send_keys 'C-l', 'C-r'
     offset = -6
     block = <<~BLOCK
